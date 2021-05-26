@@ -12,7 +12,6 @@ web3js = new web3(
   )
 );
 
-let isSubscribed = false;
 let transactionMinedBlockNumber = null;
 const blockDiff = 10;
 let isTransactionInProgress = false;
@@ -57,27 +56,25 @@ const runTransaction = () => {
         transactionMinedBlockNumber = res.blockNumber;
         console.log("New Transaction Mined : " + transactionMinedBlockNumber);
         isTransactionInProgress = false;
-        if (!isSubscribed) {
-          isSubscribed = true;
-          web3js.eth.subscribe("newBlockHeaders", (err, res) => {
-            const { number: currentBlockMined } = res;
-            console.log(
-              "Currently Mined Block : " +
-                currentBlockMined +
-                " Previous Transaction Mined in : " +
-                transactionMinedBlockNumber
-            );
-            if (
-              !isTransactionInProgress &&
-              transactionMinedBlockNumber + blockDiff <= currentBlockMined
-            ) {
-              isTransactionInProgress = true;
-              runTransaction();
-            }
-          });
-        }
       });
   });
 };
 
 runTransaction();
+web3js.eth.subscribe("newBlockHeaders", (err, res) => {
+  const { number: currentBlockMined } = res;
+  console.log(
+    "Currently Mined Block : " +
+      currentBlockMined +
+      " Previous Transaction Mined in : " +
+      transactionMinedBlockNumber
+  );
+  if (
+    !isTransactionInProgress &&
+    transactionMinedBlockNumber &&
+    transactionMinedBlockNumber + blockDiff <= currentBlockMined
+  ) {
+    isTransactionInProgress = true;
+    runTransaction();
+  }
+});
